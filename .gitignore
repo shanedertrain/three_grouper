@@ -1,3 +1,5 @@
-/people.csv
-/sorted_groups_2023-10-30.txt
-/sorted_groups_2023-10-30_21-05-46.txt
+input/*
+output/*
+
+!input/.gitkeep
+!output/.gitkeep

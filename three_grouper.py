@@ -1,8 +1,12 @@
 import csv
 import random
-import os
+from pathlib import Path
 from datetime import datetime
 from itertools import cycle
+
+PATH_INPUT_FOLDER = Path(__file__).parent / Path('input') 
+PATH_OUTPUT_FOLDER = Path(__file__).parent / Path('output') 
+PATH_PEOPLE = PATH_INPUT_FOLDER / 'people.csv'
 
 VERBOSE = True
 
@@ -21,8 +25,8 @@ class Person:
 
 # Function to create a template CSV file if it doesn't exist
 def create_template_csv():
-    with open('people.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
+    with open(PATH_PEOPLE, mode='w', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
         writer.writerow(['Name', 'Category'])
         writer.writerow(['Person1', ELDER])
         writer.writerow(['Person2', ELDER])
@@ -39,8 +43,8 @@ def create_template_csv():
 # Function to read the CSV file and return a list of dictionaries
 def read_people_csv():
     people_list = []
-    with open('people.csv', mode='r') as file:
-        reader = csv.DictReader(file)
+    with open(PATH_PEOPLE, mode='r') as file:
+        reader = csv.DictReader(file, delimiter=';')
         for row in reader:
             person = Person(row['Name'], row['Category'])
             people_list.append(person)
@@ -95,32 +99,39 @@ def fill_remaining_slots(groups: list[list[Person]], people_list: list[Person]) 
         current_group.append(person)
     return groups
 
-# Function to write the sorted groups into a file, dated in YYYY-MM-DD format
+# Function to write the sorted groups into a file in CSV format
 def write_groups_to_file(groups: list[list[Person]]):
     current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = f"sorted_groups_{current_datetime}.txt"
-    with open(file_name, 'w') as file:
+    file_name = PATH_OUTPUT_FOLDER / f"sorted_groups_{current_datetime}.txt"
+    with open(file_name, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Name', 'Category'])
+        writer.writerow([])
         for i, group in enumerate(groups, start=1):
-            file.write(f"Group {i}:\n")
+            writer.writerow([f"Group {i}:", ''])
             for person in group:
-                file.write(str(person) + "\n")
-            file.write("\n")
+                writer.writerow([person.name, person.category])
+            writer.writerow([])  # Add an empty row for separation between groups
 
-# Check if the people.csv file exists, if not, create a template
-if not os.path.exists('people.csv'):
-    create_template_csv()
+def main():
+    # Check if the people.csv file exists, if not, create a template
+    if not PATH_PEOPLE.exists():
+        create_template_csv()
 
-# Read the CSV file
-people_list = read_people_csv()
+    # Read the CSV file
+    people_list = read_people_csv()
 
-# Sort people into groups based on the given conditions
-groups = sort_people_into_groups(people_list)
+    # Sort people into groups based on the given conditions
+    groups = sort_people_into_groups(people_list)
 
-# Fill the remaining slots in groups with available people
-groups = fill_remaining_slots(groups, people_list)
+    # Fill the remaining slots in groups with available people
+    groups = fill_remaining_slots(groups, people_list)
 
-# Print the final groups
-print_groups(groups)
+    # Print the final groups
+    print_groups(groups)
 
-# Write the sorted groups to a file, dated in YYYY-MM-DD format
-write_groups_to_file(groups)
+    # Write the sorted groups to a file, dated in YYYY-MM-DD format
+    write_groups_to_file(groups)
+
+if __name__ == "__main__":
+    main()
